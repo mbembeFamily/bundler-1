@@ -47,7 +47,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency "rubocop",    "= 0.65.0"
 
   s.files = Dir.glob("{lib,exe}/**/*", File::FNM_DOTMATCH).reject {|f| File.directory?(f) }
-
   # we don't check in man pages, but we need to ship them because
   # we use them to generate the long-form help for each command.
   s.files += Dir.glob("man/**/*")
