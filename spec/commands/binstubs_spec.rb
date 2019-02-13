@@ -92,6 +92,8 @@ RSpec.describe "bundle binstubs <gem>" do
       end
     end
 
+    let(:system_bundler_version) { Bundler::VERSION }
+
     context "the bundle binstub" do
       before do
         if system_bundler_version == :bundler
@@ -123,8 +125,6 @@ RSpec.describe "bundle binstubs <gem>" do
         G
         bundle! "binstubs bundler rack prints_loaded_gems"
       end
-
-      let(:system_bundler_version) { Bundler::VERSION }
 
       it "runs bundler" do
         sys_exec! "#{bundled_app("bin/bundle")} install"

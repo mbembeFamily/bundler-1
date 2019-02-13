@@ -11,26 +11,26 @@ RSpec.describe "install with --deployment or --frozen" do
   context "with CLI flags", :bundler => "< 3" do
     it "fails without a lockfile and says that --deployment requires a lock" do
       bundle "install --deployment"
-      expect(out).to include("The --deployment flag requires a Gemfile.lock")
+      expect(err).to include("The --deployment flag requires a Gemfile.lock")
     end
 
     it "fails without a lockfile and says that --frozen requires a lock" do
       bundle "install --frozen"
-      expect(out).to include("The --frozen flag requires a Gemfile.lock")
+      expect(err).to include("The --frozen flag requires a Gemfile.lock")
     end
 
     it "disallows --deployment --system" do
       bundle "install --deployment --system"
-      expect(out).to include("You have specified both --deployment")
-      expect(out).to include("Please choose only one option")
+      expect(err).to include("You have specified both --deployment")
+      expect(err).to include("Please choose only one option")
       expect(exitstatus).to eq(15) if exitstatus
     end
 
     it "disallows --deployment --path --system" do
       bundle "install --deployment --path . --system"
-      expect(out).to include("You have specified both --path")
-      expect(out).to include("as well as --system")
-      expect(out).to include("Please choose only one option")
+      expect(err).to include("You have specified both --path")
+      expect(err).to include("as well as --system")
+      expect(err).to include("Please choose only one option")
       expect(exitstatus).to eq(15) if exitstatus
     end
 
@@ -174,11 +174,11 @@ RSpec.describe "install with --deployment or --frozen" do
 
       ENV["BUNDLE_FROZEN"] = "1"
       bundle "install"
-      expect(out).to include("deployment mode")
-      expect(out).to include("You have added to the Gemfile")
-      expect(out).to include("* rack-obama")
-      expect(out).not_to include("You have deleted from the Gemfile")
-      expect(out).not_to include("You have changed in the Gemfile")
+      expect(err).to include("deployment mode")
+      expect(err).to include("You have added to the Gemfile")
+      expect(err).to include("* rack-obama")
+      expect(err).not_to include("You have deleted from the Gemfile")
+      expect(err).not_to include("You have changed in the Gemfile")
     end
 
     it "can have --deployment set via an environment variable" do
@@ -336,7 +336,7 @@ RSpec.describe "install with --deployment or --frozen" do
         it "allows the replace" do
           bundle :install, forgotten_command_line_options(:deployment => true)
 
-          expect(out).to match(/#{success_message}/)
+          expect(err).to match(/#{success_message}/)
         end
       end
 
@@ -356,7 +356,7 @@ RSpec.describe "install with --deployment or --frozen" do
         it "allows the replace" do
           bundle :install, forgotten_command_line_options(:deployment => true)
 
-          expect(out).to match(/#{success_message}/)
+          expect(err).to match(/#{success_message}/)
         end
       end
 
