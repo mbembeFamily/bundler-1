@@ -296,14 +296,6 @@ RSpec.describe "install with --deployment or --frozen" do
     end
 
     context "when replacing a host with the same host with credentials" do
-      let(:success_message) do
-        if Bundler.bundler_major_version < 3
-          "Could not reach host localgemserver.test"
-        else
-          "Bundle complete!"
-        end
-      end
-
       before do
         install_gemfile <<-G
         source "http://user_name:password@localgemserver.test/"
@@ -333,10 +325,16 @@ RSpec.describe "install with --deployment or --frozen" do
       context "when allow_deployment_source_credential_changes is true" do
         before { bundle! "config allow_deployment_source_credential_changes true" }
 
-        it "allows the replace" do
+        it "allows the replace", :bundler => "<= 2" do
           bundle :install, forgotten_command_line_options(:deployment => true)
 
-          expect(err).to match(/#{success_message}/)
+          expect(err).to match(/Could not reach host localgemserver.test/)
+        end
+
+        it "allows the replace", :bundler => "3" do
+          bundle :install, forgotten_command_line_options(:deployment => true)
+
+          expect(out).to match(/Bundle complete!/)
         end
       end
 
@@ -353,20 +351,16 @@ RSpec.describe "install with --deployment or --frozen" do
       context "when BUNDLE_ALLOW_DEPLOYMENT_SOURCE_CREDENTIAL_CHANGES env var is true" do
         before { ENV["BUNDLE_ALLOW_DEPLOYMENT_SOURCE_CREDENTIAL_CHANGES"] = "true" }
 
-        it "allows the replace" do
+        it "allows the replace", :bundler => "<= 2" do
           bundle :install, forgotten_command_line_options(:deployment => true)
 
-          expect(err).to match(/#{success_message}/)
+          expect(err).to match(/Could not reach host localgemserver.test/)
         end
-      end
 
-      context "when BUNDLE_ALLOW_DEPLOYMENT_SOURCE_CREDENTIAL_CHANGES env var is false" do
-        before { ENV["BUNDLE_ALLOW_DEPLOYMENT_SOURCE_CREDENTIAL_CHANGES"] = "false" }
-
-        it "prevents the replace" do
+        it "allows the replace", :bundler => "3" do
           bundle :install, forgotten_command_line_options(:deployment => true)
 
-          expect(err).to match(/The list of sources changed/)
+          expect(out).to match(/Bundle complete!/)
         end
       end
     end

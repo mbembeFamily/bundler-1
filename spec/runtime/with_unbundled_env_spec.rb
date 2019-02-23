@@ -98,12 +98,12 @@ RSpec.describe "Bundler.with_env helpers" do
     it_behaves_like "an unbundling helper"
   end
 
-  describe "Bundler.clean_env" do
+  describe "Bundler.clean_env", :bundler => "<= 2" do
     let(:modified_env) { "Bundler.clean_env" }
 
     it_behaves_like "an unbundling helper"
 
-    it "prints a deprecation", :bundler => 2 do
+    it "prints a deprecation" do
       code = "Bundler.clean_env"
       bundle_exec_ruby! code.dump
       expect(err).to include(
@@ -112,7 +112,7 @@ RSpec.describe "Bundler.with_env helpers" do
       )
     end
 
-    it "does not print a deprecation", :bundler => "< 2" do
+    it "does not print a deprecation" do
       code = "Bundler.clean_env"
       bundle_exec_ruby! code.dump
       expect(out).not_to include(
@@ -138,7 +138,7 @@ RSpec.describe "Bundler.with_env helpers" do
     end
   end
 
-  describe "Bundler.with_clean_env" do
+  describe "Bundler.with_clean_env", :bundler => "<= 2" do
     it "should set ENV to unbundled_env in the block" do
       expected = Bundler.unbundled_env
       actual = Bundler.with_clean_env { ENV.to_hash }
@@ -153,7 +153,7 @@ RSpec.describe "Bundler.with_env helpers" do
       expect(ENV).not_to have_key("FOO")
     end
 
-    it "prints a deprecation", :bundler => 2 do
+    it "prints a deprecation" do
       code = "Bundler.with_clean_env {}"
       bundle_exec_ruby! code.dump
       expect(err).to include(
