@@ -537,11 +537,6 @@ RSpec.describe "bundle exec" do
       let(:executable) do
         ex = super()
         ex << "\n"
-        if LessThanProc.with(RUBY_VERSION).call("1.9")
-          # Ruby < 1.9 needs a flush for a exit by signal, later
-          # rubies do not
-          ex << "STDOUT.flush\n"
-        end
         ex << "raise SignalException, 'SIGTERM'\n"
         ex
       end
@@ -660,21 +655,13 @@ __FILE__: #{path.to_s.inspect}
       context "when the path is relative" do
         let(:path) { super().relative_path_from(bundled_app) }
 
-        if LessThanProc.with(RUBY_VERSION).call("1.9")
-          pending "relative paths have ./ __FILE__"
-        else
-          it_behaves_like "it runs"
-        end
+        it_behaves_like "it runs"
       end
 
       context "when the path is relative with a leading ./" do
         let(:path) { Pathname.new("./#{super().relative_path_from(Pathname.pwd)}") }
 
-        if LessThanProc.with(RUBY_VERSION).call("< 1.9")
-          pending "relative paths with ./ have absolute __FILE__"
-        else
-          it_behaves_like "it runs"
-        end
+        pending "relative paths with ./ have absolute __FILE__"
       end
     end
 
