@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-RSpec.describe "major deprecations", :bundler => "< 3" do
+RSpec.describe "major deprecations" do
   let(:warnings) { err }
 
   describe "Bundler" do
@@ -14,21 +14,25 @@ RSpec.describe "major deprecations", :bundler => "< 3" do
     end
 
     describe ".clean_env" do
-      it "is deprecated in favor of .unbundled_env" do
+      it "is deprecated in favor of .unbundled_env", :bundler => "2" do
         source = "Bundler.clean_env"
         bundle "exec ruby -e #{source.dump}"
         expect(warnings).to have_major_deprecation \
           "`Bundler.clean_env` has been deprecated in favor of `Bundler.unbundled_env`. " \
           "If you instead want the environment before bundler was originally loaded, use `Bundler.original_env`"
       end
+
+      pending "is removed and shows a helpful error message about it", :bundler => "3"
     end
 
     describe ".environment" do
-      it "is deprecated in favor of .load" do
+      it "is deprecated in favor of .load", :bundler => "2" do
         source = "Bundler.environment"
         bundle "exec ruby -e #{source.dump}"
         expect(warnings).to have_major_deprecation "Bundler.environment has been removed in favor of Bundler.load"
       end
+
+      pending "is removed and shows a helpful error message about it", :bundler => "3"
     end
 
     describe "bundle update --quiet" do
@@ -43,15 +47,12 @@ RSpec.describe "major deprecations", :bundler => "< 3" do
         bundle! "install"
       end
 
-      it "does not warn when no options are given", :bundler => "< 2" do
-        bundle! "update"
-        expect(warnings).not_to have_major_deprecation
-      end
-
       it "warns when no options are given", :bundler => "2" do
         bundle! "update"
         expect(warnings).to have_major_deprecation a_string_including("Pass --all to `bundle update` to update everything")
       end
+
+      pending "fails with a helpful error when no options are given", :bundler => "3"
 
       it "does not warn when --all is passed" do
         bundle! "update --all"
@@ -78,7 +79,7 @@ RSpec.describe "major deprecations", :bundler => "< 3" do
       expect(warnings).not_to have_major_deprecation
     end
 
-    it "should print a proper warning when both gems.rb and Gemfile present, and use Gemfile", :bundler => "< 2" do
+    it "should print a proper warning when both gems.rb and Gemfile present, and use Gemfile", :bundler => "2" do
       create_file "gems.rb"
       install_gemfile! <<-G
         source "file://#{gem_repo1}"
@@ -92,7 +93,7 @@ RSpec.describe "major deprecations", :bundler => "< 3" do
       expect(the_bundle).to include_gem "rack 1.0"
     end
 
-    it "should print a proper warning when both gems.rb and Gemfile present, and use gems.rb", :bundler => "2" do
+    it "should print a proper warning when both gems.rb and Gemfile present, and use gems.rb", :bundler => "3" do
       create_file "gems.rb"
       install_gemfile! <<-G
         source "file://#{gem_repo1}"
@@ -108,17 +109,23 @@ RSpec.describe "major deprecations", :bundler => "< 3" do
 
     context "with flags" do
       before do
-        install_gemfile <<-G, :path => "vendor/bundle"
+        bundle "config set --local path vendor/bundle"
+
+        gemfile <<-G
           source "file://#{gem_repo1}"
           gem "rack"
         G
       end
 
       it "should print a deprecation warning about autoremembering flags", :bundler => "3" do
+        bundle "install --retry 3"
+
         expect(warnings).to have_major_deprecation a_string_including(
           "flags passed to commands will no longer be automatically remembered."
         )
       end
+
+      pending "should fail with a helpful error when using removed flags", :bundler => "3"
 
       {
         :clean => true,
@@ -146,14 +153,6 @@ RSpec.describe "major deprecations", :bundler => "< 3" do
             )
           end
         end
-
-        context "with the #{flag_name} flag", :bundler => "< 2" do
-          it "should not print a deprecation warning" do
-            bundle "install #{flag_name} #{value}"
-
-            expect(warnings).not_to have_major_deprecation
-          end
-        end
       end
     end
   end
@@ -177,13 +176,13 @@ RSpec.describe "major deprecations", :bundler => "< 3" do
       RUBY
     end
 
-    it "should print a single deprecation warning", :bundler => "< 2" do
+    it "should print a single deprecation warning", :bundler => "2" do
       expect(warnings).to include(
         "Multiple gemfiles (gems.rb and Gemfile) detected. The gems.rb and gems.rb.locked files are currently ignored, but they will get used as soon as you delete your Gemfile and Gemfile.lock files."
       )
     end
 
-    it "should print a single deprecation warning", :bundler => "2" do
+    it "should print a single deprecation warning", :bundler => "3" do
       expect(warnings).to include(
         "Multiple gemfiles (gems.rb and Gemfile) detected. Make sure you remove Gemfile and Gemfile.lock since bundler is ignoring them in favor of gems.rb and gems.rb.locked."
       )
@@ -191,16 +190,20 @@ RSpec.describe "major deprecations", :bundler => "< 3" do
   end
 
   context "when `bundler/deployment` is required in a ruby script" do
-    it "should print a capistrano deprecation warning" do
+    before do
       ruby(<<-RUBY)
         require 'bundler/deployment'
       RUBY
+    end
 
+    it "should print a capistrano deprecation warning", :bundler => "2" do
       expect(warnings).to have_major_deprecation("Bundler no longer integrates " \
                              "with Capistrano, but Capistrano provides " \
                              "its own integration with Bundler via the " \
                              "capistrano-bundler gem. Use it instead.")
     end
+
+    pending "should fail with a helpful error", :bundler => "3"
   end
 
   describe Bundler::Dsl do
@@ -233,7 +236,7 @@ The :github git source is deprecated, and will be removed in the future. Change 
         expect(subject.dependencies.first.source.uri).to eq(github_uri)
       end
 
-      it "upgrades to https on request", :bundler => "< 2" do
+      it "upgrades to https on request", :bundler => "2" do
         Bundler.settings.temporary "github.https" => true
         expect(Bundler::SharedHelpers).to receive(:major_deprecation).with(3, msg)
         subject.gem("sparks", :github => "indirect/sparks")
@@ -255,7 +258,7 @@ The :bitbucket git source is deprecated, and will be removed in the future. Add 
     end
 
         EOS
-        expect(Bundler::SharedHelpers).to receive(:major_deprecation).with(2, msg)
+        expect(Bundler::SharedHelpers).to receive(:major_deprecation).with(3, msg)
         subject.gem("not-really-a-gem", :bitbucket => "mcorp/flatlab-rails")
       end
     end
@@ -285,13 +288,11 @@ The :gist git source is deprecated, and will be removed in the future. Add this 
       bundle! :show
     end
 
-    it "does not print a deprecation warning", :bundler => "< 2" do
-      expect(warnings).not_to have_major_deprecation
-    end
-
     it "prints a deprecation warning", :bundler => "2" do
       expect(warnings).to have_major_deprecation a_string_including("use `bundle list` instead of `bundle show`")
     end
+
+    pending "fails with a helpful message", :bundler => "3"
   end
 
   context "bundle console" do
@@ -299,13 +300,11 @@ The :gist git source is deprecated, and will be removed in the future. Add this 
       bundle "console"
     end
 
-    it "does not print a deprecation warning", :bundler => "< 2" do
-      expect(warnings).not_to have_major_deprecation
-    end
-
     it "prints a deprecation warning", :bundler => "2" do
       expect(warnings).to have_major_deprecation \
         a_string_including("bundle console will be replaced by `bin/console` generated by `bundle gem <name>`")
     end
+
+    pending "fails with a helpful message", :bundler => "3"
   end
 end
